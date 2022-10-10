@@ -1,5 +1,5 @@
 import copy
-from gotypes import Player #加上dlgo似乎有问题
+from dlgo.gotypes import Player
 
 class Move(): #棋手在一轮中可以采取的行动，下棋、停一首，认输
     def __init__(self, point = None, is_pass = False, is_resign = False):
@@ -40,9 +40,10 @@ class GoString(): #一块棋
     def merge_with(self, go_string):
         assert go_string.color == self.color
         combined_stones = self.stones | go_string.stones
-        return GoString(self.color,
-                        combined_stones,
-                        (self.liberties | go_string.liberties) - combined_stones)
+        return GoString(
+            self.color,
+            combined_stones,
+            (self.liberties | go_string.liberties) - combined_stones)
     
     @property
     def num_liberties(self):
@@ -60,7 +61,7 @@ class Board():
     def __init__(self, num_rows, num_cols):
         self.num_rows = num_rows
         self.num_cols = num_cols
-        self._grid ={}
+        self._grid ={} #A dictionary you use to store strings of stones
         
     def place_stone(self, player, point):
         assert self.is_on_grid(point) #棋子必须落在棋盘上
@@ -73,22 +74,22 @@ class Board():
                 continue
             neighbor_string = self._grid.get(neighbor) #寻找相邻棋块
             if neighbor_string is None:
-                liberties.append(neighbor)
-            elif neighbor_string.color == player:               
+                liberties.append(neighbor) #如果相邻位置没有其他棋块，添加一气
+            elif neighbor_string.color == player:   #如果相邻的棋块颜色一致，添加到相邻同色棋块中           
                 if neighbor_string not in adjacent_same_color:
                     adjacent_same_color.append(neighbor_string)
             else:
-                if neighbor_string not in adjacent_opposite_color:
+                if neighbor_string not in adjacent_opposite_color: #否则添加到异色棋块集合中
                     adjacent_opposite_color.append(neighbor_string)
         new_string = GoString(player,[point],liberties)
         
         for same_color_string in adjacent_same_color:
-            new_string = new_string.merge_with(same_color_string)
-        for new_string_point in new_string.stones:
+            new_string = new_string.merge_with(same_color_string) #合并同色棋块
+        for new_string_point in new_string.stones: #在字典里添加new_string_point: new_string
             self._grid[new_string_point] = new_string
-        for other_color_string in adjacent_opposite_color:
+        for other_color_string in adjacent_opposite_color: #相邻异色棋块去掉一气
             other_color_string.remove_liberty(point)
-        for other_color_string in adjacent_opposite_color:
+        for other_color_string in adjacent_opposite_color: #如果气等于零，提子
             if other_color_string.num_liberties == 0:
                 self._remove_string(other_color_string)
                 
@@ -98,9 +99,9 @@ class Board():
                 neighbor_string = self._grid.get(neighbor)
                 if neighbor_string is None:
                     continue
-                if neighbor_string is not string:
+                if neighbor_string is not string:#如果相邻棋块不是当前棋块，增加一气
                     neighbor_string.add_liberty(point)
-                self._grid[point] = None
+            self._grid[point] = None
         
     def is_on_grid(self,point):
         return 1<= point.row <= self.num_rows and \
@@ -162,7 +163,7 @@ class GameState():
     def situation(self):
         return (self.next_player, self.board)
     
-    def does_move_violate_ki(self, player, move):
+    def does_move_violate_ko(self, player, move):
         if not move.is_play:
             return False
         next_board = copy.deepcopy(self.board)
@@ -176,7 +177,7 @@ class GameState():
         return  False
 
     def is_valid_move(self, move):
-        if self.is_over:
+        if self.is_over():
             return False
         if move.is_pass or move.is_resign:
             return True
@@ -185,6 +186,7 @@ class GameState():
             not self.is_move_self_capture(self.next_player, move) and
             not self.does_move_violate_ko(self.next_player, move))
             
-                    
+
+                
                     
     
