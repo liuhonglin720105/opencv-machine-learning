@@ -7,7 +7,7 @@ Created on Sun Oct  9 14:16:06 2022
 """
 
 #from dlgo import agent
-from dlgo import goboard_slow as goboard
+from dlgo import goboard
 from dlgo import gotypes
 from dlgo.utils import print_board, print_move
 import time
@@ -20,7 +20,7 @@ def main():
         gotypes.Player.black: RandomBot(),
         gotypes.Player.white: RandomBot(),}
     while not game.is_over():
-        time.sleep(0.3)
+        time.sleep(0.1)
         
         print(chr(27) + "[2J")
         
